@@ -1,0 +1,120 @@
+bmath.randomseed(os.time())
+
+local player = {
+    health = 100,
+    hunger = 100,
+    wood = 0,
+    food = 3,
+    fire = 50
+}
+
+local TOTAL_NIGHTS = 99
+
+local function clamp(v, lo, hi)
+    if v < lo then return lo end
+    if v > hi then return hi end
+    return v
+end
+
+local function status()
+    print(string.format("  HP: %d | Đói: %d | Gỗ: %d | Thức ăn: %d | Lửa: %d",
+        player.health, player.hunger, player.wood, player.food, player.fire))
+end
+
+local events = {
+    {
+        text = "Một con sói tấn công!",
+        action = function()
+            local dmg = math.random(10, 30)
+            player.health = player.health - dmg
+            print("  Bạn mất " .. dmg .. " máu.")
+        end
+    },
+    {
+        text = "Bạn tìm thấy một đống gỗ.",
+        action = function()
+            local w = math.random(1, 5)
+            player.wood = player.wood + w
+            print("  Nhặt được " .. w .. " gỗ.")
+        end
+    },
+    {
+        text = "Bạn tìm thấy thức ăn.",
+        action = function()
+            player.food = player.food + 1
+            print("  Nhận được 1 thức ăn.")
+        end
+    },
+    {
+        text = "Một đêm yên tĩnh.",
+        action = function()
+            print("  Không có gì xảy ra.")
+        end
+    },
+    {
+        text = "Gió lạnh thổi mạnh.",
+        action = function()
+            player.fire = player.fire - math.random(5, 15)
+            print("  Lửa bị yếu đi.")
+        end
+    }
+}
+
+local function eat()
+    if player.food > 0 then
+        player.food = player.food - 1
+        player.hunger = clamp(player.hunger + 40, 0, 100)
+        print("  Bạn đã ăn một thức ăn.")
+    else
+        print("  Không còn thức ăn.")
+    end
+end
+
+local function addWood()
+    if player.wood > 0 then
+        player.wood = player.wood - 1
+        player.fire = clamp(player.fire + 20, 0, 100)
+        print("  Bạn đã thêm gỗ vào lửa.")
+    else
+        print("  Không còn gỗ.")
+    end
+end
+
+print("=== 99 ĐÊM TRONG RỪNG ===")
+
+for night = 1, TOTAL_NIGHTS do
+    print(string.format("\nĐêm %d/%d", night, TOTAL_NIGHTS))
+
+    player.hunger = clamp(player.hunger - math.random(5, 10), 0, 100)
+    player.fire = clamp(player.fire - math.random(5, 10), 0, 100)
+
+    if player.hunger == 0 then
+        player.health = player.health - 10
+        print("  Bạn đang chết đói!")
+    end
+    if player.fire == 0 then
+        player.health = player.health - 10
+        print("  Lửa đã tắt, bạn bị lạnh!")
+    end
+
+    local e = events[math.random(#events)]
+    print("  " .. e.text)
+    e.action()
+
+    if player.hunger < 40 and player.food > 0 then
+        eat()
+    end
+    if player.fire < 40 and player.wood > 0 then
+        addWood()
+    end
+
+    player.health = clamp(player.health, 0, 100)
+    status()
+
+    if player.health <= 0 then
+        print("\nBạn đã không sống sót qua đêm thứ " .. night .. ".")
+        os.exit(0)
+    end
+end
+
+print("\nChúc mừng! Bạn đã sống sót qua 99 đêm trong rừng!")
